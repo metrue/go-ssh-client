@@ -1,4 +1,4 @@
-module go-ssh-client
+module github.com/metrue/ssh
 
 go 1.12
 
