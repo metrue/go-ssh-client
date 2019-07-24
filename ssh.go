@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"strings"
 
@@ -82,8 +83,11 @@ func (c Client) RunCommand(command string) (string, error) {
 		return "", err
 	}
 
-	defer client.session.Close()
-	defer client.conn.Close()
+	defer func() {
+		if err := client.disconnect(); err != nil {
+			log.Println(err)
+		}
+	}()
 
 	var stdoutBuf bytes.Buffer
 	client.session.Stdout = &stdoutBuf
