@@ -28,6 +28,7 @@ func main() {
 ## Test
 
 ```
+$ make start_ssh_server
 $ make test
 $ make clean #clean up running Docker container
 ```
