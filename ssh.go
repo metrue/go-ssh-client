@@ -120,7 +120,6 @@ func (c Client) connect() (Client, error) {
 	}
 
 	addr := net.JoinHostPort(c.server, c.port)
-
 	conn, err := ssh.Dial("tcp", addr, config)
 	if err != nil {
 		return Client{}, err
