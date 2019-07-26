@@ -2,7 +2,6 @@ package ssh
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -120,7 +119,7 @@ func (c Client) connect() (Client, error) {
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
 	}
 
-	addr := fmt.Sprintf("%s:%s", c.server, c.port)
+	addr := net.JoinHostPort(c.server, c.port)
 	conn, err := ssh.Dial("tcp", addr, config)
 	if err != nil {
 		return Client{}, err
