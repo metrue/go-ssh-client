@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"strings"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -76,10 +75,10 @@ func (c Client) WithKey(keyfile string) Client {
 }
 
 // RunCommand run command onto remote server via SSH
-func (c Client) RunCommand(command string) (string, error) {
+func (c Client) RunCommand(command string) ([]byte, []byte, error) {
 	client, err := c.connect()
 	if err != nil {
-		return "", err
+		return nil, nil, err
 	}
 
 	defer func() {
@@ -89,13 +88,12 @@ func (c Client) RunCommand(command string) (string, error) {
 	}()
 
 	var stdoutBuf bytes.Buffer
+	var stderrBuf bytes.Buffer
 	client.session.Stdout = &stdoutBuf
+	client.session.Stderr = &stderrBuf
 
-	if err := client.session.Run(command); err != nil {
-		return "", err
-	}
-
-	return strings.TrimSuffix(stdoutBuf.String(), "\n"), nil
+	err = client.session.Run(command)
+	return stdoutBuf.Bytes(), stderrBuf.Bytes(), err
 }
 
 // Connect connect server
