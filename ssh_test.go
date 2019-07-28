@@ -1,24 +1,48 @@
 package ssh
 
 import (
+	"reflect"
 	"testing"
 )
 
 func TestSSH(t *testing.T) {
-	host := "127.0.0.1"
-	output, err := New(host).
-		WithUser("root").
-		WithPassword("THEPASSWORDYOUCREATED").
-		RunCommand("ls -a")
-	if err != nil {
-		t.Fatal(err)
+	cases := []struct {
+		cmd           string
+		errIsNil      bool
+		stdoutIsEmpty bool
+		stderrIsEmpty bool
+	}{
+		{
+			cmd:           "ls -a",
+			errIsNil:      true,
+			stdoutIsEmpty: false,
+			stderrIsEmpty: true,
+		},
+		{
+			cmd:           "docker ps",
+			errIsNil:      false,
+			stdoutIsEmpty: true,
+			stderrIsEmpty: false,
+		},
 	}
-	expect := `.
-..
-.bashrc
-.cache
-.profile`
-	if output != expect {
-		t.Fatalf("should get %s but got %s", expect, output)
+
+	for _, c := range cases {
+		host := "127.0.0.1"
+		stdout, stderr, err := New(host).
+			WithUser("root").
+			WithPassword("THEPASSWORDYOUCREATED").
+			RunCommand(c.cmd)
+
+		if !reflect.DeepEqual(err == nil, c.errIsNil) {
+			t.Fatalf("should get %v but gota %v", c.errIsNil, err == nil)
+		}
+
+		if !reflect.DeepEqual(len(stdout) == 0, c.stdoutIsEmpty) {
+			t.Fatalf("should get %v but gota %v", c.stdoutIsEmpty, len(stdout) == 0)
+		}
+
+		if !reflect.DeepEqual(len(stderr) == 0, c.stderrIsEmpty) {
+			t.Fatalf("should get %v but gota %v", c.stderrIsEmpty, len(stderr) == 0)
+		}
 	}
 }
