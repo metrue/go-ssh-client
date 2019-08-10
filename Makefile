@@ -7,3 +7,5 @@ start_ssh_server:
 	docker run -d --rm --name ssh-server -p 22:22 ssh-server:latest
 clean:
 	docker stop ssh-server
+
+.PHONY: all start_ssh_server test clean
