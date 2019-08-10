@@ -1,8 +1,4 @@
-.PHONY: all
-
-all: test clean
-
-test: start_ssh_server
+test:
 	go test -v ./...
 lint:
 	golangci-lint run ./
@@ -13,3 +9,5 @@ start_ssh_server:
 clean:
 	@echo "stop ssh server ..."
 	docker stop ssh-server
+
+all: start_ssh_server test clean
