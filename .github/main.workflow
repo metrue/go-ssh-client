@@ -1,4 +1,4 @@
-workflow "build and push to dockerhub" {
+workflow "Test" {
   on = "push"
   resolves = [
     "test",
