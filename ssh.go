@@ -2,10 +2,13 @@ package ssh
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
 
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -83,6 +86,7 @@ func (c Client) RunCommand(command string) ([]byte, []byte, error) {
 
 	defer func() {
 		if err := client.disconnect(); err != nil {
+			fmt.Println("-->", err)
 			log.Println(err)
 		}
 	}()
@@ -143,10 +147,14 @@ func (c Client) connect() (Client, error) {
 // Disconnect disconnect with server
 func (c Client) disconnect() error {
 	if err := c.session.Close(); err != nil {
-		return err
+		// "https://github.com/golang/go/issues/28108"
+		if err == io.EOF {
+			return nil
+		}
+		return errors.Wrap(err, "session close failure")
 	}
 	if err := c.conn.Close(); err != nil {
-		return err
+		return errors.Wrap(err, "connection close failure")
 	}
 	return nil
 }
