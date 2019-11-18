@@ -77,6 +77,17 @@ func (c Client) WithKey(keyfile string) Client {
 	}
 }
 
+// WithPort with port
+func (c Client) WithPort(port string) Client {
+	return Client{
+		server:   c.server,
+		port:     port,
+		user:     c.user,
+		key:      c.key,
+		password: c.password,
+	}
+}
+
 // RunCommand run command onto remote server via SSH
 func (c Client) RunCommand(command string) ([]byte, []byte, error) {
 	client, err := c.connect()
