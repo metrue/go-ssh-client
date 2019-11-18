@@ -31,6 +31,7 @@ func TestSSH(t *testing.T) {
 			host := "127.0.0.1"
 			stdout, stderr, err := New(host).
 				WithUser("root").
+				WithPort("2222").
 				WithKey("./test/id_rsa").
 				RunCommand(c.cmd)
 
@@ -73,6 +74,7 @@ func TestSSH(t *testing.T) {
 			host := "127.0.0.1"
 			stdout, stderr, err := New(host).
 				WithUser("root").
+				WithPort("2222").
 				WithPassword("THEPASSWORDYOUCREATED").
 				RunCommand(c.cmd)
 
