@@ -1,0 +1,34 @@
+on: [push, pull_request]
+name: ci
+jobs:
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup Go 1.12
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.12
+        id: go
+
+      - name: check out
+        uses: actions/checkout@master
+
+      - name: setup docker
+        run: |
+          sudo apt-get remove -y docker docker-engine docker.io containerd runc
+          apt-get update -y
+          sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common lsb-core curl
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+          sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu \$(lsb_release -cs) stable"
+          sudo apt-get update -y
+          sudo apt-get install -y docker-ce
+          docker run hello-world
+
+      - name: lint
+        run: |
+          docker run --rm -v $(pwd):/app -w /app golangci/golangci-lint \
+          golangci-lint run -v
+
+      - name: unit test
+        run: |
+          go test -v ./...
