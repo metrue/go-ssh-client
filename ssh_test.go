@@ -1,6 +1,8 @@
 package ssh
 
 import (
+	"bufio"
+	"bytes"
 	"reflect"
 	"testing"
 )
@@ -29,27 +31,36 @@ func TestSSH(t *testing.T) {
 
 		for _, c := range cases {
 			host := "127.0.0.1"
-			stdout, stderr, err := New(host).
+			var inPipe bytes.Buffer
+			var outPipe bytes.Buffer
+			var errPipe bytes.Buffer
+			options := CommandOptions{
+				Stdin:  bufio.NewReader(&inPipe),
+				Stdout: bufio.NewWriter(&outPipe),
+				Stderr: bufio.NewWriter(&errPipe),
+			}
+			err := New(host).
 				WithUser("root").
 				WithPort("2222").
 				WithKey("./test/id_rsa").
-				RunCommand(c.cmd)
+				RunCommand(c.cmd, options)
 
 			if !reflect.DeepEqual(err == nil, c.errIsNil) {
 				t.Fatalf("should get %v but got %v", c.errIsNil, err == nil)
 			}
 
-			if !reflect.DeepEqual(len(stdout) == 0, c.stdoutIsEmpty) {
-				t.Fatalf("should get %v but got %v", c.stdoutIsEmpty, len(stdout) == 0)
+			if !reflect.DeepEqual(len(outPipe.String()) == 0, c.stdoutIsEmpty) {
+				t.Fatalf("should get %v but got %v", c.stdoutIsEmpty, len(outPipe.String()) == 0)
 			}
 
-			if !reflect.DeepEqual(len(stderr) == 0, c.stderrIsEmpty) {
-				t.Fatalf("should get %v but got %v", c.stderrIsEmpty, len(stderr) == 0)
+			if !reflect.DeepEqual(len(errPipe.String()) == 0, c.stderrIsEmpty) {
+				t.Fatalf("should get %v but got %v", c.stderrIsEmpty, len(errPipe.String()) == 0)
 			}
 		}
 	})
 
 	t.Run("password", func(t *testing.T) {
+
 		cases := []struct {
 			cmd           string
 			errIsNil      bool
@@ -72,22 +83,31 @@ func TestSSH(t *testing.T) {
 
 		for _, c := range cases {
 			host := "127.0.0.1"
-			stdout, stderr, err := New(host).
+			var inPipe bytes.Buffer
+			var outPipe bytes.Buffer
+			var errPipe bytes.Buffer
+			options := CommandOptions{
+				Stdin:  bufio.NewReader(&inPipe),
+				Stdout: bufio.NewWriter(&outPipe),
+				Stderr: bufio.NewWriter(&errPipe),
+			}
+
+			err := New(host).
 				WithUser("root").
 				WithPort("2222").
 				WithPassword("THEPASSWORDYOUCREATED").
-				RunCommand(c.cmd)
+				RunCommand(c.cmd, options)
 
 			if !reflect.DeepEqual(err == nil, c.errIsNil) {
 				t.Fatalf("should get %v but got %v", c.errIsNil, err == nil)
 			}
 
-			if !reflect.DeepEqual(len(stdout) == 0, c.stdoutIsEmpty) {
-				t.Fatalf("should get %v but got %v", c.stdoutIsEmpty, len(stdout) == 0)
+			if !reflect.DeepEqual(len(outPipe.String()) == 0, c.stdoutIsEmpty) {
+				t.Fatalf("should get %v but got %v", c.stdoutIsEmpty, len(outPipe.String()) == 0)
 			}
 
-			if !reflect.DeepEqual(len(stderr) == 0, c.stderrIsEmpty) {
-				t.Fatalf("should get %v but got %v", c.stderrIsEmpty, len(stderr) == 0)
+			if !reflect.DeepEqual(len(errPipe.String()) == 0, c.stderrIsEmpty) {
+				t.Fatalf("should get %v but got %v", c.stderrIsEmpty, len(errPipe.String()) == 0)
 			}
 		}
 	})

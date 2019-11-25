@@ -1,12 +1,12 @@
 package ssh
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net"
+	"strings"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
@@ -88,11 +88,19 @@ func (c Client) WithPort(port string) Client {
 	}
 }
 
+// CommandOptions options for command
+type CommandOptions struct {
+	Stdin  io.Reader
+	Stdout io.Writer
+	Stderr io.Writer
+	Env    []string
+}
+
 // RunCommand run command onto remote server via SSH
-func (c Client) RunCommand(command string) ([]byte, []byte, error) {
+func (c Client) RunCommand(command string, options CommandOptions) error {
 	client, err := c.connect()
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 
 	defer func() {
@@ -102,13 +110,42 @@ func (c Client) RunCommand(command string) ([]byte, []byte, error) {
 		}
 	}()
 
-	var stdoutBuf bytes.Buffer
-	var stderrBuf bytes.Buffer
-	client.session.Stdout = &stdoutBuf
-	client.session.Stderr = &stderrBuf
+	if options.Stdin != nil {
+		stdin, err := client.session.StdinPipe()
+		if err != nil {
+			return fmt.Errorf("Unable to setup stdin for session: %v", err)
+		}
+		go io.Copy(stdin, options.Stdin)
+	}
 
-	err = client.session.Run(command)
-	return stdoutBuf.Bytes(), stderrBuf.Bytes(), err
+	if options.Stdout != nil {
+		stdout, err := client.session.StdoutPipe()
+		if err != nil {
+			return fmt.Errorf("Unable to setup stdout for session: %v", err)
+		}
+		go io.Copy(options.Stdout, stdout)
+	}
+
+	if options.Stderr != nil {
+		stderr, err := client.session.StderrPipe()
+		if err != nil {
+			return fmt.Errorf("Unable to setup stderr for session: %v", err)
+		}
+		go io.Copy(options.Stderr, stderr)
+	}
+
+	for _, env := range options.Env {
+		variable := strings.Split(env, "=")
+		if len(variable) != 2 {
+			continue
+		}
+
+		if err := client.session.Setenv(variable[0], variable[1]); err != nil {
+			return err
+		}
+	}
+
+	return client.session.Run(command)
 }
 
 // Connect connect server
