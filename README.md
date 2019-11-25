@@ -13,10 +13,14 @@ import (
 
 func main() {
 	host := "127.0.0.1"
-	output, err := ssh.New(host).
+	err := ssh.New(host).
 		WithUser("root").
 		WithPassword("THEPASSWORDYOUCREATED").
-		RunCommand("ls -a")
+		RunCommand("ls -a", CommandOptions{
+			Stdout: os.Stdout,
+			Stderr: os.Stderr,
+			Stdin:  os.Stdin,
+		})
 	if err != nil {
 		log.Fatal(err)
 	} else {

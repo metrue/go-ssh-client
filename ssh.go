@@ -115,6 +115,7 @@ func (c Client) RunCommand(command string, options CommandOptions) error {
 		if err != nil {
 			return fmt.Errorf("Unable to setup stdin for session: %v", err)
 		}
+		// nolint
 		go io.Copy(stdin, options.Stdin)
 	}
 
@@ -123,6 +124,7 @@ func (c Client) RunCommand(command string, options CommandOptions) error {
 		if err != nil {
 			return fmt.Errorf("Unable to setup stdout for session: %v", err)
 		}
+		// nolint
 		go io.Copy(options.Stdout, stdout)
 	}
 
@@ -131,6 +133,7 @@ func (c Client) RunCommand(command string, options CommandOptions) error {
 		if err != nil {
 			return fmt.Errorf("Unable to setup stderr for session: %v", err)
 		}
+		// nolint
 		go io.Copy(options.Stderr, stderr)
 	}
 
