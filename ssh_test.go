@@ -3,29 +3,25 @@ package ssh
 import (
 	"bufio"
 	"bytes"
-	"reflect"
 	"testing"
 )
 
 func TestSSH(t *testing.T) {
 	t.Run("public key", func(t *testing.T) {
 		cases := []struct {
-			cmd           string
-			errIsNil      bool
-			stdoutIsEmpty bool
-			stderrIsEmpty bool
+			cmd    string
+			stdout string
+			stderr string
 		}{
 			{
-				cmd:           "ls -a",
-				errIsNil:      true,
-				stdoutIsEmpty: false,
-				stderrIsEmpty: true,
+				cmd:    "echo 1",
+				stdout: "1\n",
+				stderr: "",
 			},
 			{
-				cmd:           "docker ps",
-				errIsNil:      false,
-				stdoutIsEmpty: true,
-				stderrIsEmpty: false,
+				cmd:    "docker ps",
+				stdout: "",
+				stderr: "bash: docker: command not found\n",
 			},
 		}
 
@@ -39,45 +35,37 @@ func TestSSH(t *testing.T) {
 				Stdout: bufio.NewWriter(&outPipe),
 				Stderr: bufio.NewWriter(&errPipe),
 			}
-			err := New(host).
+			_ = New(host).
 				WithUser("root").
 				WithPort("2222").
 				WithKey("./test/id_rsa").
 				RunCommand(c.cmd, options)
 
-			if !reflect.DeepEqual(err == nil, c.errIsNil) {
-				t.Fatalf("should get %v but got %v", c.errIsNil, err == nil)
+			if outPipe.String() != c.stdout {
+				t.Fatalf("should get %v but got %v", c.stdout, outPipe.String())
 			}
 
-			if !reflect.DeepEqual(len(outPipe.String()) == 0, c.stdoutIsEmpty) {
-				t.Fatalf("should get %v but got %v", c.stdoutIsEmpty, len(outPipe.String()) == 0)
-			}
-
-			if !reflect.DeepEqual(len(errPipe.String()) == 0, c.stderrIsEmpty) {
-				t.Fatalf("should get %v but got %v", c.stderrIsEmpty, len(errPipe.String()) == 0)
+			if errPipe.String() != c.stderr {
+				t.Fatalf("should get %v but got %v", c.stderr, errPipe.String())
 			}
 		}
 	})
 
 	t.Run("password", func(t *testing.T) {
-
 		cases := []struct {
-			cmd           string
-			errIsNil      bool
-			stdoutIsEmpty bool
-			stderrIsEmpty bool
+			cmd    string
+			stdout string
+			stderr string
 		}{
 			{
-				cmd:           "ls -a",
-				errIsNil:      true,
-				stdoutIsEmpty: false,
-				stderrIsEmpty: true,
+				cmd:    "echo 1",
+				stdout: "1\n",
+				stderr: "",
 			},
 			{
-				cmd:           "docker ps",
-				errIsNil:      false,
-				stdoutIsEmpty: true,
-				stderrIsEmpty: false,
+				cmd:    "docker ps",
+				stdout: "",
+				stderr: "bash: docker: command not found\n",
 			},
 		}
 
@@ -91,23 +79,18 @@ func TestSSH(t *testing.T) {
 				Stdout: bufio.NewWriter(&outPipe),
 				Stderr: bufio.NewWriter(&errPipe),
 			}
-
-			err := New(host).
+			_ = New(host).
 				WithUser("root").
 				WithPort("2222").
 				WithPassword("THEPASSWORDYOUCREATED").
 				RunCommand(c.cmd, options)
 
-			if !reflect.DeepEqual(err == nil, c.errIsNil) {
-				t.Fatalf("should get %v but got %v", c.errIsNil, err == nil)
+			if outPipe.String() != c.stdout {
+				t.Fatalf("should get %v but got %v", c.stdout, outPipe.String())
 			}
 
-			if !reflect.DeepEqual(len(outPipe.String()) == 0, c.stdoutIsEmpty) {
-				t.Fatalf("should get %v but got %v", c.stdoutIsEmpty, len(outPipe.String()) == 0)
-			}
-
-			if !reflect.DeepEqual(len(errPipe.String()) == 0, c.stderrIsEmpty) {
-				t.Fatalf("should get %v but got %v", c.stderrIsEmpty, len(errPipe.String()) == 0)
+			if errPipe.String() != c.stderr {
+				t.Fatalf("should get %v but got %v", c.stderr, errPipe.String())
 			}
 		}
 	})
