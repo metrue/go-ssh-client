@@ -168,16 +168,17 @@ func (c Client) RunCommand(command string, options CommandOptions) error {
 // Connect connect server
 func (c Client) connect() (Client, error) {
 	Auth := []ssh.AuthMethod{}
-	if c.key != "" {
+
+	if c.password != "" {
+		Auth = append(Auth, ssh.Password(c.password))
+	} else if c.key != "" {
 		publicKey, err := publicKey(c.key)
 		if err != nil {
 			return Client{}, err
 		}
 		Auth = append(Auth, publicKey)
-	}
-
-	if c.password != "" {
-		Auth = append(Auth, ssh.Password(c.password))
+	} else {
+		return Client{}, fmt.Errorf("password or keyfile required for ssh connection ")
 	}
 
 	config := &ssh.ClientConfig{

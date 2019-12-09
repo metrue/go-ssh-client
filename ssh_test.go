@@ -41,8 +41,8 @@ func TestSSH(t *testing.T) {
 				WithKey("./test/id_rsa").
 				RunCommand(c.cmd, options)
 
-			if errPipe.String() != "" {
-				t.Fatalf("should get %v but got %v", "", errPipe.String())
+			if errPipe.String() != c.stderr {
+				t.Fatalf("should get %v but got %v", c.stderr, errPipe.String())
 			}
 			if outPipe.String() != c.stdout {
 				t.Fatalf("should get %v but got %v", c.stdout, outPipe.String())
@@ -84,8 +84,8 @@ func TestSSH(t *testing.T) {
 				WithPassword("THEPASSWORDYOUCREATED").
 				RunCommand(c.cmd, options)
 
-			if errPipe.String() != "" {
-				t.Fatalf("should get %v but got %v", "", errPipe.String())
+			if errPipe.String() != c.stderr {
+				t.Fatalf("should get %v but got %v", c.stderr, errPipe.String())
 			}
 
 			if outPipe.String() != c.stdout {
