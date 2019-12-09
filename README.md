@@ -12,34 +12,34 @@ This is a little pacakge helps you run command on remote host via SSH
 package main
 
 import (
-	"log"
-	"os"
+  "log"
+  "os"
 
-	ssh "github.com/metrue/go-ssh-client"
+  ssh "github.com/metrue/go-ssh-client"
 )
 
 func main() {
-	host := "127.0.0.1"
-	script := `
+  host := "127.0.0.1"
+  script := `
 x=1
 while [ $x -le 5 ]; do
-	echo 'hello'
-	x=$(( $x + 1 ))
-	sleep 1
+  echo 'hello'
+  x=$(( $x + 1 ))
+  sleep 1
 done
 `
-	err := ssh.New(host).
-		WithUser("root").
-		WithPassword("THEPASSWORDYOUCREATED").
-		WithPort("2222").
-		RunCommand(script, ssh.CommandOptions{
-			Stdout: os.Stdout,
-			Stderr: os.Stderr,
-			Stdin:  os.Stdin,
-		})
-	if err != nil {
-		log.Fatal(err)
-	}
+  err := ssh.New(host).
+    WithUser("root").
+    WithKey("/your/path/to/id_ras").  // Default is ~/.ssh/id_rsa
+    WithPort("2222").    // Default is 22
+    RunCommand(script, ssh.CommandOptions{
+      Stdout: os.Stdout,
+      Stderr: os.Stderr,
+      Stdin:  os.Stdin,
+    })
+  if err != nil {
+    log.Fatal(err)
+  }
 }
 ```
 
