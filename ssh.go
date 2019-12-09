@@ -6,11 +6,23 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"path/filepath"
 	"strings"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 )
+
+// Clienter defines interface of SSH client
+type Clienter interface {
+	WithServer(add string) Client
+	WithUser(user string) Client
+	WithPassword(password string) Client
+	WithKey(key string) Client
+	WithPort(port string) Client
+	RunCommand(command string, options CommandOptions) error
+}
 
 // Client ssh client
 type Client struct {
@@ -27,9 +39,11 @@ type Client struct {
 
 // New create a client
 func New(server string) Client {
+	home, _ := homedir.Dir()
 	return Client{
 		server: server,
 		port:   "22",
+		key:    filepath.Join(home, ".ssh/id_ras"),
 	}
 }
 
@@ -154,16 +168,17 @@ func (c Client) RunCommand(command string, options CommandOptions) error {
 // Connect connect server
 func (c Client) connect() (Client, error) {
 	Auth := []ssh.AuthMethod{}
-	if c.key != "" {
+
+	if c.password != "" {
+		Auth = append(Auth, ssh.Password(c.password))
+	} else if c.key != "" {
 		publicKey, err := publicKey(c.key)
 		if err != nil {
 			return Client{}, err
 		}
 		Auth = append(Auth, publicKey)
-	}
-
-	if c.password != "" {
-		Auth = append(Auth, ssh.Password(c.password))
+	} else {
+		return Client{}, fmt.Errorf("password or keyfile required for ssh connection ")
 	}
 
 	config := &ssh.ClientConfig{
@@ -222,3 +237,7 @@ func publicKey(file string) (ssh.AuthMethod, error) {
 	}
 	return ssh.PublicKeys(key), nil
 }
+
+var (
+	_ Clienter = Client{}
+)
