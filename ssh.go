@@ -6,11 +6,23 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"path/filepath"
 	"strings"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 )
+
+// Clienter defines interface of SSH client
+type Clienter interface {
+	WithServer(add string) Client
+	WithUser(user string) Client
+	WithPassword(password string) Client
+	WithKey(key string) Client
+	WithPort(port string) Client
+	RunCommand(command string, options CommandOptions) error
+}
 
 // Client ssh client
 type Client struct {
@@ -27,9 +39,11 @@ type Client struct {
 
 // New create a client
 func New(server string) Client {
+	home, _ := homedir.Dir()
 	return Client{
 		server: server,
 		port:   "22",
+		key:    filepath.Join(home, ".ssh/id_ras"),
 	}
 }
 
@@ -222,3 +236,7 @@ func publicKey(file string) (ssh.AuthMethod, error) {
 	}
 	return ssh.PublicKeys(key), nil
 }
+
+var (
+	_ Clienter = Client{}
+)

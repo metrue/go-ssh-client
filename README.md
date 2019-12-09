@@ -30,8 +30,8 @@ done
 `
 	err := ssh.New(host).
 		WithUser("root").
-		WithPassword("THEPASSWORDYOUCREATED").
-		WithPort("2222").
+    WithKey("/your/path/to/id_ras").  // Default is ~/.ssh/id_rsa
+		WithPort("2222").    // Default is 22
 		RunCommand(script, ssh.CommandOptions{
 			Stdout: os.Stdout,
 			Stderr: os.Stderr,
