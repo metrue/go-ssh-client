@@ -43,7 +43,7 @@ func New(server string) Client {
 	return Client{
 		server: server,
 		port:   "22",
-		key:    filepath.Join(home, ".ssh/id_ras"),
+		key:    filepath.Join(home, ".ssh/id_rsa"),
 	}
 }
 
