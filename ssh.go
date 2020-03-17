@@ -8,6 +8,7 @@ import (
 	"net"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
@@ -21,6 +22,7 @@ type Clienter interface {
 	WithPassword(password string) Client
 	WithKey(key string) Client
 	WithPort(port string) Client
+	Connectable(timeout time.Duration) (bool, error)
 	RunCommand(command string, options CommandOptions) error
 }
 
@@ -42,6 +44,7 @@ func New(server string) Client {
 	home, _ := homedir.Dir()
 	return Client{
 		server: server,
+		user:   "root",
 		port:   "22",
 		key:    filepath.Join(home, ".ssh/id_rsa"),
 	}
@@ -104,15 +107,20 @@ func (c Client) WithPort(port string) Client {
 
 // CommandOptions options for command
 type CommandOptions struct {
-	Stdin  io.Reader
-	Stdout io.Writer
-	Stderr io.Writer
-	Env    []string
+	Stdin   io.Reader
+	Stdout  io.Writer
+	Stderr  io.Writer
+	Timeout time.Duration
+	Env     []string
 }
 
 // RunCommand run command onto remote server via SSH
 func (c Client) RunCommand(command string, options CommandOptions) error {
-	client, err := c.connect()
+	timeout := 20 * time.Second
+	if options.Timeout > 0 {
+		timeout = options.Timeout
+	}
+	client, err := c.connect(timeout)
 	if err != nil {
 		return err
 	}
@@ -165,8 +173,25 @@ func (c Client) RunCommand(command string, options CommandOptions) error {
 	return client.session.Run(command)
 }
 
+// Connectable check if client can connect to ssh server within timeout
+func (c Client) Connectable(timeout time.Duration) (bool, error) {
+	client, err := c.connect(timeout)
+	if err != nil {
+		return false, err
+	}
+
+	defer func() {
+		if err := client.disconnect(); err != nil {
+			fmt.Println("-->", err)
+			log.Println(err)
+		}
+	}()
+
+	return true, nil
+}
+
 // Connect connect server
-func (c Client) connect() (Client, error) {
+func (c Client) connect(timeout time.Duration) (Client, error) {
 	Auth := []ssh.AuthMethod{}
 
 	if c.password != "" {
@@ -184,6 +209,7 @@ func (c Client) connect() (Client, error) {
 	config := &ssh.ClientConfig{
 		User:            c.user,
 		Auth:            Auth,
+		Timeout:         timeout,
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error { return nil },
 	}
 
