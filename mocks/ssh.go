@@ -8,6 +8,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	go_ssh_client "github.com/metrue/go-ssh-client"
 	reflect "reflect"
+	time "time"
 )
 
 // MockClienter is a mock of Clienter interface
@@ -101,6 +102,21 @@ func (m *MockClienter) WithPort(port string) go_ssh_client.Client {
 func (mr *MockClienterMockRecorder) WithPort(port interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithPort", reflect.TypeOf((*MockClienter)(nil).WithPort), port)
+}
+
+// Connectable mocks base method
+func (m *MockClienter) Connectable(timeout time.Duration) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Connectable", timeout)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Connectable indicates an expected call of Connectable
+func (mr *MockClienterMockRecorder) Connectable(timeout interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connectable", reflect.TypeOf((*MockClienter)(nil).Connectable), timeout)
 }
 
 // RunCommand mocks base method
