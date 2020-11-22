@@ -258,6 +258,22 @@ func publicKey(file string) (ssh.AuthMethod, error) {
 	}
 
 	key, err := ssh.ParsePrivateKey(buffer)
+	if err != nil && err.Error() == "ssh: this private key is passphrase protected" {
+		// Note: Newer version of Go support the error type `PassphraseMissingError'. Using that, the error check is:
+		// if err, ok := err.(*PassphraseMissingError); !ok {...}
+		// Note: Put the variable name just into a variable; would need to be passed through from fx/middlewares/ssh.go
+		// using context.Contexter.
+		envName := "SSH_PASS_PHRASE"
+		passphrase := os.Getenv(envName)
+		if passphrase != "" {
+			key, err = ssh.ParsePrivateKeyWithPassphrase(buffer, []byte(passphrase))
+			if err != nil {
+				err = fmt.Errorf("Using passphrase from environment: %s, %v", envName, err)
+			}
+		} else {
+			err = fmt.Errorf("No passphrase defined by environment: %s, %v", envName, err)
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
